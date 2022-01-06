@@ -19,8 +19,8 @@ public class App {
         DurakPlayer player2 = new DurakPlayer("Bob");
         DurakGame game = new DurakGame(List.of(player1, player2));
         game.start();
-        do {
+        while (!game.isOver()) {
             game.playRound();
-        } while (!game.isOver());
+        }
     }
 }

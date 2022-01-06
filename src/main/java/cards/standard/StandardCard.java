@@ -1,11 +1,13 @@
 package cards.standard;
 
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import engine.Card;
 
 @Getter
+@EqualsAndHashCode
 @AllArgsConstructor
 public class StandardCard implements Card<StandardCard> {
 

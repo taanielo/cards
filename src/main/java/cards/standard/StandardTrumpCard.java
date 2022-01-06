@@ -1,10 +1,14 @@
 package cards.standard;
 
+import java.util.function.Function;
+
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import engine.Card;
 
 @Getter
+@EqualsAndHashCode
 public class StandardTrumpCard implements Card<StandardTrumpCard> {
 
     private final Integer rank;
@@ -26,6 +30,10 @@ public class StandardTrumpCard implements Card<StandardTrumpCard> {
         } else {
             return rank;
         }
+    }
+
+    public static Function<Card<StandardTrumpCard>,StandardTrumpCard> normalize() {
+        return StandardTrumpCard.class::cast;
     }
 
     @Override

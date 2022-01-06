@@ -12,17 +12,23 @@ import engine.Card;
 import engine.CardDeck;
 import engine.Game;
 
+/**
+ * Durak card game - https://en.wikipedia.org/wiki/Durak
+ */
 @Slf4j
 public class DurakGame implements Game {
 
     private final List<DurakPlayer> players;
     private final DurakExtendedCardDeck deck;
+    private DurakExtendedCardDeck tableCards;
+    private int cardsKilledInRound;
     private DurakPlayer mainAttacker;
     private DurakPlayer defender;
     private int roundNr;
 
     public DurakGame(List<DurakPlayer> players) {
         deck = new DurakExtendedCardDeck();
+        tableCards = new DurakExtendedCardDeck();
         this.players = players;
     }
 
@@ -36,7 +42,7 @@ public class DurakGame implements Game {
         Suit trumpSuit = ((StandardTrumpCard)trumpCard).getSuit();
         // set all same suit cards as trump
         deck.getCards().stream()
-                .map(StandardTrumpCard.class::cast)
+                .map(StandardTrumpCard.normalize())
                 .filter(card -> card.getSuit() == trumpSuit)
                 .forEach(StandardTrumpCard::setAsTrump);
 
@@ -61,20 +67,38 @@ public class DurakGame implements Game {
     @Override
     public void playRound() {
         log.debug("-- Round {} start --", roundNr);
+        cardsKilledInRound = 0;
 
-        Card<StandardTrumpCard> attackCard = mainAttacker.findLowestCardToPlay();
-        log.info("Player {} plays {}", mainAttacker, attackCard);
-        Optional<Card<StandardTrumpCard>> defendingCard = defender.findDefendingCard(attackCard);
-        if (defendingCard.isEmpty()) {
+        Card<StandardTrumpCard> attackCard = mainAttacker.findLowestCardToPlay()
+                .orElseThrow(() -> new IllegalStateException("No cards to play! Game over!"));
+        tableCards.add(attackCard);
+        log.info("Player {} attacks {}", mainAttacker, attackCard);
+        checkWinner();
+        Optional<StandardTrumpCard> defendingCardOpt = defender.findDefendingCard(attackCard);
+        if (defendingCardOpt.isEmpty()) {
             log.info("Player {} picks up {}", defender, attackCard);
-            defender.pickUpCard(attackCard);
+            defender.pickCard(attackCard);
+            // TODO other players can add more cards to pick up
         } else {
-            log.info("Player {} plays {}", defender, defendingCard.get());
-            defender.removeCard(defendingCard.get());
+            StandardTrumpCard defendingCard = defendingCardOpt.get();
+            log.info("Player {} defends {}", defender, defendingCard);
+            defender.removeCard(defendingCard);
+            tableCards.add(defendingCard);
+            cardsKilledInRound++;
+
+            // switch attacker and defender
+            DurakPlayer currentDefender = defender;
+            defender = mainAttacker;
+            mainAttacker = currentDefender;
+
+            // TODO attackers can add more cards to play until cardsKilledInRound <= 6
         }
         for (DurakPlayer player : players) {
             log.debug("Player {} cards: {}", player, player.getCardDeck());
         }
+
+        players.forEach(player -> DurakAction.takeNewCards(player, deck));
+        checkWinner();
 
         roundNr++;
     }
@@ -82,15 +106,14 @@ public class DurakGame implements Game {
     @Override
     public boolean isOver() {
         return players.stream()
-                .filter(durakPlayer -> durakPlayer.getCardDeck().getCards().size() == 0)
-                .toList()
-                .size() == 1;
+                .anyMatch(durakPlayer -> durakPlayer.getCardDeck().getCards().isEmpty());
     }
 
     private List<Card<StandardTrumpCard>> createStartingHandFromDeck() {
         List<Card<StandardTrumpCard>> startingHand = new ArrayList<>();
         for (int i = 0; i < 6; i++) {
-            startingHand.add(deck.getAndRemoveTopCard());
+            Optional<Card<StandardTrumpCard>> topCard = deck.getAndRemoveTopCard();
+            topCard.ifPresent(startingHand::add);
         }
         return startingHand;
     }
@@ -101,7 +124,7 @@ public class DurakGame implements Game {
         for (DurakPlayer player : players) {
             CardDeck<StandardTrumpCard> playerCardDeck = player.getCardDeck();
             Optional<StandardTrumpCard> playerWeakestTrumpCard = playerCardDeck.getCards().stream()
-                    .map(StandardTrumpCard.class::cast)
+                    .map(StandardTrumpCard.normalize())
                     .filter(StandardTrumpCard::isTrump)
                     .sorted()
                     .findFirst();
@@ -116,4 +139,18 @@ public class DurakGame implements Game {
         }
         return playerWithWeakestTrumpCard;
     }
+
+    /**
+     * TODO actually game has loser - Durak, and all others as winners
+     */
+    private void checkWinner() {
+        // check winner
+        Optional<DurakPlayer> winner = players.stream()
+                .filter(player -> player.getCardDeck().getCards().isEmpty())
+                .findFirst();
+        if (winner.isPresent()) {
+            log.info("Player {} wins the game!", winner.get());
+        }
+    }
+
 }

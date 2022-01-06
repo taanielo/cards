@@ -27,7 +27,7 @@ public class DurakPlayer implements Player {
         }
     }
 
-    public void pickUpCard(Card<StandardTrumpCard> card) {
+    public void pickCard(Card<StandardTrumpCard> card) {
         cardDeck.add(card);
     }
 
@@ -35,21 +35,22 @@ public class DurakPlayer implements Player {
         cardDeck.remove(card);
     }
 
-    public Card<StandardTrumpCard> findLowestCardToPlay() {
-        Card<StandardTrumpCard> cardToPlay = cardDeck.getCards().stream()
-                .min(findLowestGameCard())
-                .orElseThrow(() -> new IllegalStateException("Player has no cards!"));
-        cardDeck.remove(cardToPlay);
+    public Optional<Card<StandardTrumpCard>> findLowestCardToPlay() {
+        Optional<Card<StandardTrumpCard>> cardToPlay = cardDeck.getCards().stream()
+                .min(findLowestGameCard());
+        cardToPlay.ifPresent(cardDeck::remove);
         return cardToPlay;
     }
 
-    public Optional<Card<StandardTrumpCard>> findDefendingCard(Card<StandardTrumpCard> attackCard) {
-        Predicate<Card<StandardTrumpCard>> suitPredicate = ((StandardTrumpCard)attackCard).isTrump()
-                ? (card) -> ((StandardTrumpCard)card).isTrump()
-                : (card) -> ((StandardTrumpCard)card).isTrump() || ((StandardTrumpCard)card).getSuit().equals(((StandardTrumpCard)attackCard).getSuit());
+    public Optional<StandardTrumpCard> findDefendingCard(Card<StandardTrumpCard> attackCard) {
+        StandardTrumpCard attackCardStd = ((StandardTrumpCard) attackCard);
+        Predicate<StandardTrumpCard> suitPredicate = attackCardStd.isTrump()
+                ? StandardTrumpCard::isTrump
+                : (card) -> card.isTrump() || card.getSuit().equals(attackCardStd.getSuit());
         return cardDeck.getCards().stream()
+                .map(StandardTrumpCard.normalize())
                 .filter(suitPredicate)
-                .filter(card -> ((StandardTrumpCard)card).getGameRank() > ((StandardTrumpCard)attackCard).getGameRank())
+                .filter(card -> card.getGameRank() > attackCardStd.getGameRank())
                 .min(findLowestGameCard());
     }
 
