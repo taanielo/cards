@@ -39,20 +39,20 @@ public class StandardCard implements Card<StandardCard> {
 
     public static String getSymbol(int rank, Suit suit) {
         String[] symbols;
-        String color = "\u001b[30m";
+        String redAnsiColor = "\u001b[30m";
         String resetColor = "\u001b[0m";
         if (suit == Suit.SPADES) {
             symbols = SYMBOLS_SPADES;
         } else if (suit == Suit.HEARTS) {
             symbols = SYMBOLS_HEARTS;
-            color = "\u001b[31m";
+            redAnsiColor = "\u001b[31m";
         } else if (suit == Suit.DIAMONDS) {
             symbols = SYMBOLS_DIAMONDS;
-            color = "\u001b[31m";
+            redAnsiColor = "\u001b[31m";
         } else {
             symbols = SYMBOLS_CLUBS;
         }
-        return color + symbols[rank] + resetColor;
+        return redAnsiColor + symbols[rank] + resetColor;
     }
 
 }
