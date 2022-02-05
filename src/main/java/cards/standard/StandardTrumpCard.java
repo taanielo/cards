@@ -2,13 +2,13 @@ package cards.standard;
 
 import java.util.function.Function;
 
-import lombok.EqualsAndHashCode;
+import javax.annotation.Nonnull;
+
 import lombok.Getter;
 
 import engine.Card;
 
 @Getter
-@EqualsAndHashCode
 public class StandardTrumpCard implements Card<StandardTrumpCard> {
 
     private final Integer rank;
@@ -37,12 +37,20 @@ public class StandardTrumpCard implements Card<StandardTrumpCard> {
     }
 
     @Override
-    public int compareTo(Card<StandardTrumpCard> card) {
+    public int compareTo(@Nonnull Card<StandardTrumpCard> card) {
         StandardTrumpCard comparableCard = (StandardTrumpCard)card;
         if (trump && !comparableCard.isTrump()) {
             return 1;
         }
         return rank.compareTo(comparableCard.getRank());
+    }
+
+    @Override
+    public boolean equals(Object card) {
+        if (card instanceof StandardTrumpCard otherCard) {
+            return otherCard.getSuit() == suit && otherCard.rank.equals(rank);
+        }
+        return false;
     }
 
     @Override

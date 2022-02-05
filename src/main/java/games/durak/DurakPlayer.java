@@ -1,13 +1,13 @@
 package games.durak;
 
+import java.util.Collection;
 import java.util.Comparator;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.function.Predicate;
 
 import cards.standard.StandardTrumpCard;
 import engine.Card;
-import engine.CardDeck;
 import engine.Player;
 
 public class DurakPlayer implements Player {
@@ -21,36 +21,23 @@ public class DurakPlayer implements Player {
         this.cardDeck = new DurakExtendedCardDeck();
     }
 
-    public void setStartingHand(List<Card<StandardTrumpCard>> cards) {
-        for (Card<StandardTrumpCard> card : cards) {
-            cardDeck.add(card);
-        }
+    public void playCard(DurakGameTable gameTable) {
+
     }
 
-    public void pickCard(Card<StandardTrumpCard> card) {
-        cardDeck.add(card);
+    @Override
+    public String name() {
+        return name;
     }
 
-    public void removeCard(Card<StandardTrumpCard> card) {
-        cardDeck.remove(card);
-    }
-
-    public Optional<Card<StandardTrumpCard>> findLowestCardToPlay() {
-        Optional<Card<StandardTrumpCard>> cardToPlay = cardDeck.getCards().stream()
-                .min(findLowestGameCard());
-        cardToPlay.ifPresent(cardDeck::remove);
-        return cardToPlay;
-    }
-
-    public Optional<StandardTrumpCard> findDefendingCard(Card<StandardTrumpCard> attackCard) {
-        StandardTrumpCard attackCardStd = ((StandardTrumpCard) attackCard);
-        Predicate<StandardTrumpCard> suitPredicate = attackCardStd.isTrump()
+    public Optional<StandardTrumpCard> findDefendingCard(StandardTrumpCard attackCard) {
+        Predicate<StandardTrumpCard> suitPredicate = attackCard.isTrump()
                 ? StandardTrumpCard::isTrump
-                : (card) -> card.isTrump() || card.getSuit().equals(attackCardStd.getSuit());
+                : (card) -> card.isTrump() || card.getSuit().equals(attackCard.getSuit());
         return cardDeck.getCards().stream()
                 .map(StandardTrumpCard.normalize())
                 .filter(suitPredicate)
-                .filter(card -> card.getGameRank() > attackCardStd.getGameRank())
+                .filter(card -> card.getGameRank() > attackCard.getGameRank())
                 .min(findLowestGameCard());
     }
 
@@ -63,22 +50,31 @@ public class DurakPlayer implements Player {
     }
 
     @Override
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public CardDeck<StandardTrumpCard> getCardDeck() {
-        return cardDeck;
-    }
-
-    @Override
     public String toString() {
         return "[" + name + "]";
     }
 
+    public void dealStartingCards(DurakExtendedCardDeck deck) {
+        for (int i = 0; i < 6; i++) {
+            cardDeck.add(deck.getAndRemoveTopCard().get());
+        }
+    }
+
     private static Comparator<Card<StandardTrumpCard>> findLowestGameCard() {
         return Comparator.comparingInt(value -> ((StandardTrumpCard)value).getGameRank());
+    }
+
+    private static class CardHand {
+        private final Collection<StandardTrumpCard> cards = new HashSet<>();
+
+        private void addCard(StandardTrumpCard card) {
+            cards.add(card);
+        }
+
+        private Optional<StandardTrumpCard> findLowestCard() {
+            return cards.stream()
+                    .min(StandardTrumpCard::compareTo);
+        }
     }
 
 }

@@ -12,13 +12,11 @@ import lombok.extern.slf4j.Slf4j;
 import cards.standard.StandardCard;
 import cards.standard.StandardTrumpCard;
 import cards.standard.Suit;
-import engine.Card;
-import engine.CardDeck;
 
 @Slf4j
-public class DurakExtendedCardDeck implements CardDeck<StandardTrumpCard> {
+public class DurakExtendedCardDeck {
 
-    private List<Card<StandardTrumpCard>> cards = new ArrayList<>();
+    private List<StandardTrumpCard> cards = new ArrayList<>();
 
     public void createMainDeck() {
         cards = new ArrayList<>(52);
@@ -31,27 +29,21 @@ public class DurakExtendedCardDeck implements CardDeck<StandardTrumpCard> {
         Collections.shuffle(cards);
     }
 
-    public Optional<Card<StandardTrumpCard>> getAndRemoveTopCard() {
+    public Optional<StandardTrumpCard> getAndRemoveTopCard() {
         if (cards.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(cards.remove(0));
     }
 
-    public void add(Card<StandardTrumpCard> card) {
+    public void add(StandardTrumpCard card) {
         cards.add(card);
     }
 
-    @Override
-    public List<Card<StandardTrumpCard>> getCards() {
-        return cards;
+    public List<StandardTrumpCard> getCards() {
+        return Collections.unmodifiableList(cards);
     }
 
-
-    @Override
-    public void remove(Card<StandardTrumpCard> card) {
-        cards.remove(card);
-    }
 
     @Override
     public String toString() {

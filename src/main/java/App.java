@@ -1,7 +1,6 @@
-import java.util.List;
-
 import lombok.extern.slf4j.Slf4j;
 
+import games.durak.DurakExtendedCardDeck;
 import games.durak.DurakGame;
 import games.durak.DurakPlayer;
 
@@ -15,12 +14,11 @@ public class App {
 
     public void run() {
         log.info("Initializing ..");
-        DurakPlayer player1 = new DurakPlayer("John");
-        DurakPlayer player2 = new DurakPlayer("Bob");
-        DurakGame game = new DurakGame(List.of(player1, player2));
+        DurakPlayer john = new DurakPlayer("John");
+        DurakPlayer bob = new DurakPlayer("Bob");
+        DurakExtendedCardDeck cardDeck = new DurakExtendedCardDeck();
+        DurakGame game = new DurakGame(cardDeck, john, bob);
         game.start();
-        while (!game.isOver()) {
-            game.playRound();
-        }
+        game.play();
     }
 }
